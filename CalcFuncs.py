@@ -2,14 +2,11 @@
 
 #Percentage of Input
 def percentage(num):
-    ...
-
-def ce():
-    ...
+    return str(round(num/100), 5)
 
 #Turn the Input to Frac (^-1)
-def frac():
-    ...
+def frac(num):
+    return str(round(1/num, 5))
 
 #Square the Input
 def square(num):
