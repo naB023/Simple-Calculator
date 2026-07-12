@@ -1,11 +1,13 @@
-import tkinter as tk
+import customtkinter as ctk
 import CalcFuncs as cf
 from math import sqrt
 
-root = tk.Tk()
+root = ctk.CTk()
 
 root.title("Simple Calculator")
 root.geometry("500x500")
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("green")
 
 root.rowconfigure(0, weight=1)
 root.rowconfigure(1, weight=4)
@@ -17,42 +19,67 @@ firstNum = None
 operator = None
 newNum = True
 
-displayframe = tk.Frame(root)
+#Styling
+DISPLAY = "#303134"
+TEXT = "#FFFFFF"
+fg_color = "#3C4043"
+HOVER = "#4A4D52"
+
+BUTTON_STYLE = {
+    "font": ("Segoe UI", 14),
+    "fg_color": "#3C4043",
+    "text_color": "white",
+    "border_width": 0,
+    "corner_radius": 12,
+    "hover_color": "#4A4D52",
+}
+
+displayframe = ctk.CTkFrame(root)
+displayframe.configure(fg_color=DISPLAY)
 displayframe.rowconfigure(0, minsize=70)
 for i in range(3):
     displayframe.columnconfigure(i, weight=1, minsize=100)
 
-prevDisplay = tk.Label(displayframe, text="", anchor="e", font=('Arial, 12'))
-display = tk.Label(displayframe, text=displayed, anchor="e", pady=5, font=('Arial, 24'))
+prevDisplay = ctk.CTkLabel(displayframe, text="", anchor="e", font=("Segoe UI", 12), fg_color=DISPLAY, text_color=TEXT)
+display = ctk.CTkLabel(displayframe, text=displayed, anchor="e", pady=5, font=("Segoe UI", 24, "bold"), fg_color=DISPLAY, text_color=TEXT)
 prevDisplay.grid(row=0, column=0, columnspan=4, sticky='ew', padx=3, pady=3)
 display.grid(row=1, column=0, columnspan=4, sticky='ew', padx=3, pady=3)
 
+#Functions
+    
 def updateDisplay():
     display.configure(text=displayed)
 
-def moveToUpperLayer():
+def setAnswer(answer):
     global displayed
 
-    prevDisplay.configure(text=displayed)
-    display.configure(text="0")
-
-def checkInt(answer):
-    global displayed
-
-    if answer.is_integer():
+    if isinstance(answer, float) and answer.is_integer():
         displayed = str(int(answer))
     else:
-        displayed = str(answer)
+        displayed = str(round(answer, 5))
+    
+    updateDisplay()
+
+def formatInt(num):
+    if isinstance(num, float) and num.is_integer():
+        return str(int(num))
+    return str(num)
 
 def ce():
-    global displayed
+    global displayed, newNum
+
     displayed = "0"
+    newNum = True
+
     updateDisplay()
 
 def clear():
-    global displayed
+    global displayed, firstNum, operator, newNum
 
     displayed = "0"
+    firstNum = None
+    operator = None
+    newNum = True
 
     prevDisplay.configure(text="")
     updateDisplay()
@@ -60,7 +87,7 @@ def clear():
 def back():
     global displayed, operator, firstNum
 
-    if len(displayed) <= 1:
+    if len(displayed) <= 1 or displayed == "Error":
         displayed = "0"
     else:
         displayed = displayed[:-1]
@@ -84,48 +111,71 @@ def addNum(num):
 def calculate():
     global displayed, firstNum, operator, newNum
 
+    if operator is None:
+        return
+
+    if isinstance(firstNum, float) and firstNum.is_integer():
+        dpfirstNum = int(firstNum)
+    else:
+        dpfirstNum = firstNum
+
     secondNum = float(displayed)
+    if isinstance(secondNum, float) and secondNum.is_integer():
+        dpsecondNum = int(secondNum)
+    else:
+        dpsecondNum = secondNum
+
     try:
         if operator == "+":
+            disptext = f"{dpfirstNum}+{dpsecondNum}"
             firstNum += secondNum
         elif operator == "-":
+            disptext = f"{dpfirstNum}-{dpsecondNum}"
             firstNum -= secondNum
         elif operator == "*":
+            disptext = f"{dpfirstNum}×{dpsecondNum}"
             firstNum *= secondNum
         elif operator == "/":
-                firstNum /= secondNum
+            disptext = f"{dpfirstNum}÷{dpsecondNum}"
+            firstNum /= secondNum
         elif operator == "x²":
+            disptext = f"{dpfirstNum}²"
             firstNum = pow(firstNum, 2)
     
         displayed = str(firstNum)
 
-        checkInt(firstNum)
+        setAnswer(firstNum)
 
-        updateDisplay()
-        moveToUpperLayer()
+        prevDisplay.configure(text=f"{disptext} =")
 
-    except:
+    except ZeroDivisionError:
         displayed = "Error"
         prevDisplay.configure(text="")
+
         updateDisplay()
 
 def percentage():
     global displayed
 
-    answer = cf.percentage(float(displayed))
+    secondNum = float(displayed)
 
-    checkInt(answer)
+    if operator in ["+", "-"]:
+        secondNum = firstNum * secondNum/100
+    
+    elif operator in ["*", "/"]:
+        secondNum = secondNum/100
 
-    updateDisplay()
+    setAnswer(secondNum)
 
 def frac():
     global displayed
 
-    answer = cf.frac(float(displayed))
+    num = float(displayed)
+    answer = 1/num
 
-    checkInt(answer)
+    setAnswer(answer)
 
-    updateDisplay()
+    prevDisplay.configure(text=f"1/({formatInt(num)})")
 
 def sqroot():
     global displayed
@@ -133,21 +183,22 @@ def sqroot():
     num = float(displayed)
     if num < 0:
         displayed = "Error"
+        updateDisplay()
     else:
         answer = sqrt(num)
-        checkInt(answer)
-    
-    updateDisplay()
+        setAnswer(answer)
 
+    prevDisplay.configure(text=f"√({formatInt(num)})")
+    
 def square():
     global displayed
 
     num = float(displayed)
     answer = num ** 2
 
-    checkInt(answer)
+    setAnswer(answer)
 
-    updateDisplay()
+    prevDisplay.configure(text=f"({formatInt(num)})²")
 
 def inverse():
     global displayed
@@ -155,9 +206,9 @@ def inverse():
     num = float(displayed)
     answer = -num
     
-    checkInt(answer)
+    setAnswer(answer)
 
-    updateDisplay()
+    prevDisplay.configure(text=f"-({formatInt(num)})")
 
 def addComma():
     global displayed, newNum
@@ -174,6 +225,11 @@ def addComma():
 def operate(op):
     global firstNum, operator, newNum
 
+    if newNum and operator is not None:
+        operator = op
+        prevDisplay.configure(text=f"{firstNum} {op}")
+        return
+
     if operator is None:
         firstNum = float(displayed)
     else:
@@ -185,92 +241,96 @@ def operate(op):
     prevDisplay.configure(text=f"{displayed} {op}")
 
 def result():
-    global operator, newNum
+    global operator, firstNum, newNum
+
+    if operator is None:
+        return
 
     calculate()
+
     operator = None
-    newNum = None
+    firstNum = None
+    newNum = True
 
 #Display Buttons
-buttonframe = tk.Frame(root)
+buttonframe = ctk.CTkFrame(root)
+buttonframe.configure(fg_color=DISPLAY)
 for i in range(6):
     buttonframe.rowconfigure(i, weight=1, minsize=20)
 for j in range(4):
     buttonframe.columnconfigure(j, weight=1, minsize=70)
 
-buttonFont = ("Arial, 11")
+btnPercent = ctk.CTkButton(buttonframe, text="%", command=percentage, **BUTTON_STYLE)
+btnPercent.grid(row=0, column=0, sticky='nsew', padx=2, pady=2)
 
-btnPercent = tk.Button(buttonframe, text="%", font=buttonFont, command=percentage)
-btnPercent.grid(row=0, column=0, sticky='nsew')
+btnCE = ctk.CTkButton(buttonframe, text="CE", command=ce, **BUTTON_STYLE)
+btnCE.grid(row=0, column=1, sticky='nsew', padx=2, pady=2)
 
-btnCE = tk.Button(buttonframe, text="CE", font=buttonFont, command=ce)
-btnCE.grid(row=0, column=1, sticky='nsew')
+btnClear = ctk.CTkButton(buttonframe, text="C", command=clear, **BUTTON_STYLE)
+btnClear.grid(row=0, column=2, sticky='nsew', padx=2, pady=2)
 
-btnClear = tk.Button(buttonframe, text="C", font=buttonFont, command=clear)
-btnClear.grid(row=0, column=2, sticky='nsew')
+btnBack = ctk.CTkButton(buttonframe, text="⌫", command=back, **BUTTON_STYLE)
+btnBack.grid(row=0, column=3, sticky='nsew', padx=2, pady=2)
 
-btnBack = tk.Button(buttonframe, text="<<", font=buttonFont, command=back)
-btnBack.grid(row=0, column=3, sticky='nsew')
+btnFraction = ctk.CTkButton(buttonframe, text="¹/x", command=frac, **BUTTON_STYLE)
+btnFraction.grid(row=1, column=0, sticky='nsew', padx=2, pady=2)
 
-btnFraction = tk.Button(buttonframe, text="x⁻¹", font=buttonFont, command=frac)
-btnFraction.grid(row=1, column=0, sticky='nsew')
+btnSquare = ctk.CTkButton(buttonframe, text="x²", command=square, **BUTTON_STYLE)
+btnSquare.grid(row=1, column=1, sticky='nsew', padx=2, pady=2)
 
-btnSquare = tk.Button(buttonframe, text="x²", font=buttonFont, command=square)
-btnSquare.grid(row=1, column=1, sticky='nsew')
+btnSqRoot = ctk.CTkButton(buttonframe, text="√x", command=sqroot, **BUTTON_STYLE)
+btnSqRoot.grid(row=1, column=2, sticky='nsew', padx=2, pady=2)
 
-btnSqRoot = tk.Button(buttonframe, text="√x", font=buttonFont, command=sqroot)
-btnSqRoot.grid(row=1, column=2, sticky='nsew')
+btnDivide = ctk.CTkButton(buttonframe, text="÷", command=lambda: operate("/"), **BUTTON_STYLE)
+btnDivide.grid(row=1, column=3, sticky='nsew', padx=2, pady=2)
 
-btnDivide = tk.Button(buttonframe, text="÷", font=buttonFont, command=lambda: operate("/"))
-btnDivide.grid(row=1, column=3, sticky='nsew')
+btnMult = ctk.CTkButton(buttonframe, text="×", command=lambda: operate("*"), **BUTTON_STYLE)
+btnMult.grid(row=2, column=3, sticky='nsew', padx=2, pady=2)
 
-btnMult = tk.Button(buttonframe, text="×", font=buttonFont, command=lambda: operate("*"))
-btnMult.grid(row=2, column=3, sticky='nsew')
+btnMinus = ctk.CTkButton(buttonframe, text="-", command=lambda: operate("-"), **BUTTON_STYLE)
+btnMinus.grid(row=3, column=3, sticky='nsew', padx=2, pady=2)
 
-btnMinus = tk.Button(buttonframe, text="-", font=buttonFont, command=lambda: operate("-"))
-btnMinus.grid(row=3, column=3, sticky='nsew')
+btnPlus = ctk.CTkButton(buttonframe, text="+", command=lambda: operate("+"), **BUTTON_STYLE)
+btnPlus.grid(row=4, column=3, sticky='nsew', padx=2, pady=2)
 
-btnPlus = tk.Button(buttonframe, text="+", font=buttonFont, command=lambda: operate("+"))
-btnPlus.grid(row=4, column=3, sticky='nsew')
+btnInverse = ctk.CTkButton(buttonframe, text="+/-", command=inverse, **BUTTON_STYLE)
+btnInverse.grid(row=5, column=0, sticky='nsew', padx=2, pady=2)
 
-btnInverse = tk.Button(buttonframe, text="+/-", font=buttonFont, command=inverse)
-btnInverse.grid(row=5, column=0, sticky='nsew')
+btnComma = ctk.CTkButton(buttonframe, text=".", command=addComma, **BUTTON_STYLE)
+btnComma.grid(row=5, column=2, sticky='nsew', padx=2, pady=2)
 
-btnComma = tk.Button(buttonframe, text=".", font=buttonFont, command=addComma)
-btnComma.grid(row=5, column=2, sticky='nsew')
+btnResult = ctk.CTkButton(buttonframe, text="=", command=result, **BUTTON_STYLE)
+btnResult.grid(row=5, column=3, sticky='nsew', padx=2, pady=2)
 
-btnResult = tk.Button(buttonframe, text="=", font=buttonFont, command=result)
-btnResult.grid(row=5, column=3, sticky='nsew')
+btn1 = ctk.CTkButton(buttonframe, text="1", command=lambda: addNum(1), **BUTTON_STYLE)
+btn1.grid(row=2, column=0, sticky='nsew', padx=2, pady=2)
 
-btn1 = tk.Button(buttonframe, text="1", font=buttonFont, command=lambda: addNum(1))
-btn1.grid(row=2, column=0, sticky='nsew')
+btn2 = ctk.CTkButton(buttonframe, text="2", command=lambda: addNum(2), **BUTTON_STYLE)
+btn2.grid(row=2, column=1, sticky='nsew', padx=2, pady=2)
 
-btn2 = tk.Button(buttonframe, text="2", font=buttonFont, command=lambda: addNum(2))
-btn2.grid(row=2, column=1, sticky='nsew')
+btn3 = ctk.CTkButton(buttonframe, text="3", command=lambda: addNum(3), **BUTTON_STYLE)
+btn3.grid(row=2, column=2, sticky='nsew', padx=2, pady=2)
 
-btn3 = tk.Button(buttonframe, text="3", font=buttonFont, command=lambda: addNum(3))
-btn3.grid(row=2, column=2, sticky='nsew')
+btn4 = ctk.CTkButton(buttonframe, text="4", command=lambda: addNum(4), **BUTTON_STYLE)
+btn4.grid(row=3, column=0, sticky='nsew', padx=2, pady=2)
 
-btn4 = tk.Button(buttonframe, text="4", font=buttonFont, command=lambda: addNum(4))
-btn4.grid(row=3, column=0, sticky='nsew')
+btn5 = ctk.CTkButton(buttonframe, text="5", command=lambda: addNum(5), **BUTTON_STYLE)
+btn5.grid(row=3, column=1, sticky='nsew', padx=2, pady=2)
 
-btn5 = tk.Button(buttonframe, text="5", font=buttonFont, command=lambda: addNum(5))
-btn5.grid(row=3, column=1, sticky='nsew')
+btn6 = ctk.CTkButton(buttonframe, text="6", command=lambda: addNum(6), **BUTTON_STYLE)
+btn6.grid(row=3, column=2, sticky='nsew', padx=2, pady=2)
 
-btn6 = tk.Button(buttonframe, text="6", font=buttonFont, command=lambda: addNum(6))
-btn6.grid(row=3, column=2, sticky='nsew')
+btn7 = ctk.CTkButton(buttonframe, text="7", command=lambda: addNum(7), **BUTTON_STYLE)
+btn7.grid(row=4, column=0, sticky='nsew', padx=2, pady=2)
 
-btn7 = tk.Button(buttonframe, text="7", font=buttonFont, command=lambda: addNum(7))
-btn7.grid(row=4, column=0, sticky='nsew')
+btn8 = ctk.CTkButton(buttonframe, text="8", command=lambda: addNum(8), **BUTTON_STYLE)
+btn8.grid(row=4, column=1, sticky='nsew', padx=2, pady=2)
 
-btn8 = tk.Button(buttonframe, text="8", font=buttonFont, command=lambda: addNum(8))
-btn8.grid(row=4, column=1, sticky='nsew')
+btn9 = ctk.CTkButton(buttonframe, text="9", command=lambda: addNum(9), **BUTTON_STYLE)
+btn9.grid(row=4, column=2, sticky='nsew', padx=2, pady=2)
 
-btn9 = tk.Button(buttonframe, text="9", font=buttonFont, command=lambda: addNum(9))
-btn9.grid(row=4, column=2, sticky='nsew')
-
-btn0 = tk.Button(buttonframe, text="0", font=buttonFont, command=lambda: addNum(0))
-btn0.grid(row=5, column=1, sticky='nsew')
+btn0 = ctk.CTkButton(buttonframe, text="0", command=lambda: addNum(0), **BUTTON_STYLE)
+btn0.grid(row=5, column=1, sticky='nsew', padx=2, pady=2)
 
 displayframe.grid(row=0, column=0, sticky='nsew')
 buttonframe.grid(row=1, column=0, sticky='nsew')
