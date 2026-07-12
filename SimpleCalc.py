@@ -1,5 +1,6 @@
 import tkinter as tk
 import CalcFuncs as cf
+from math import sqrt
 
 root = tk.Tk()
 
@@ -35,11 +36,13 @@ def moveToUpperLayer():
     prevDisplay.configure(text=displayed)
     display.configure(text="0")
 
-def percentage():
+def checkInt(answer):
     global displayed
 
-    displayed = cf.percentage(int(displayed))
-    updateDisplay()
+    if answer.is_integer():
+        displayed = str(int(answer))
+    else:
+        displayed = str(answer)
 
 def ce():
     global displayed
@@ -64,12 +67,6 @@ def back():
 
     updateDisplay()
 
-def frac():
-    global displayed
-
-    displayed = cf.frac(int(displayed))
-    updateDisplay()
-
 def addNum(num):
     global displayed, newNum
 
@@ -77,7 +74,7 @@ def addNum(num):
         displayed = str(num)
         newNum = False
     else:
-        if displayed == "0":
+        if displayed == "0" or displayed == "Error":
             displayed = str(num)
         else:
             displayed += str(num)
@@ -88,22 +85,91 @@ def calculate():
     global displayed, firstNum, operator, newNum
 
     secondNum = float(displayed)
-    if operator == "+":
-        firstNum += secondNum
-    elif operator == "-":
-        firstNum -= secondNum
-    elif operator == "*":
-        firstNum *= secondNum
-    elif operator == "/":
-        firstNum /= secondNum
+    try:
+        if operator == "+":
+            firstNum += secondNum
+        elif operator == "-":
+            firstNum -= secondNum
+        elif operator == "*":
+            firstNum *= secondNum
+        elif operator == "/":
+                firstNum /= secondNum
+        elif operator == "x²":
+            firstNum = pow(firstNum, 2)
     
-    displayed = str(firstNum)
+        displayed = str(firstNum)
 
-    if firstNum.is_integer():
-        displayed = str(int(firstNum))
+        checkInt(firstNum)
+
+        updateDisplay()
+        moveToUpperLayer()
+
+    except:
+        displayed = "Error"
+        prevDisplay.configure(text="")
+        updateDisplay()
+
+def percentage():
+    global displayed
+
+    answer = cf.percentage(float(displayed))
+
+    checkInt(answer)
 
     updateDisplay()
-    moveToUpperLayer()
+
+def frac():
+    global displayed
+
+    answer = cf.frac(float(displayed))
+
+    checkInt(answer)
+
+    updateDisplay()
+
+def sqroot():
+    global displayed
+
+    num = float(displayed)
+    if num < 0:
+        displayed = "Error"
+    else:
+        answer = sqrt(num)
+        checkInt(answer)
+    
+    updateDisplay()
+
+def square():
+    global displayed
+
+    num = float(displayed)
+    answer = num ** 2
+
+    checkInt(answer)
+
+    updateDisplay()
+
+def inverse():
+    global displayed
+
+    num = float(displayed)
+    answer = -num
+    
+    checkInt(answer)
+
+    updateDisplay()
+
+def addComma():
+    global displayed, newNum
+
+    if newNum:
+        displayed = "0."
+        newNum = False
+    elif "." not in displayed:
+        displayed += "."
+
+    updateDisplay()
+
 
 def operate(op):
     global firstNum, operator, newNum
@@ -149,10 +215,10 @@ btnBack.grid(row=0, column=3, sticky='nsew')
 btnFraction = tk.Button(buttonframe, text="x⁻¹", font=buttonFont, command=frac)
 btnFraction.grid(row=1, column=0, sticky='nsew')
 
-btnSquare = tk.Button(buttonframe, text="x²", font=buttonFont, command=cf.square)
+btnSquare = tk.Button(buttonframe, text="x²", font=buttonFont, command=square)
 btnSquare.grid(row=1, column=1, sticky='nsew')
 
-btnSqRoot = tk.Button(buttonframe, text="√x", font=buttonFont, command=cf.sqroot)
+btnSqRoot = tk.Button(buttonframe, text="√x", font=buttonFont, command=sqroot)
 btnSqRoot.grid(row=1, column=2, sticky='nsew')
 
 btnDivide = tk.Button(buttonframe, text="÷", font=buttonFont, command=lambda: operate("/"))
@@ -167,10 +233,10 @@ btnMinus.grid(row=3, column=3, sticky='nsew')
 btnPlus = tk.Button(buttonframe, text="+", font=buttonFont, command=lambda: operate("+"))
 btnPlus.grid(row=4, column=3, sticky='nsew')
 
-btnInverse = tk.Button(buttonframe, text="+/-", font=buttonFont, command=cf.inverse)
+btnInverse = tk.Button(buttonframe, text="+/-", font=buttonFont, command=inverse)
 btnInverse.grid(row=5, column=0, sticky='nsew')
 
-btnComma = tk.Button(buttonframe, text=".", font=buttonFont, command=cf.comma)
+btnComma = tk.Button(buttonframe, text=".", font=buttonFont, command=addComma)
 btnComma.grid(row=5, column=2, sticky='nsew')
 
 btnResult = tk.Button(buttonframe, text="=", font=buttonFont, command=result)
