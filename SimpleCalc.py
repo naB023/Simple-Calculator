@@ -1,5 +1,4 @@
 import customtkinter as ctk
-import CalcFuncs as cf
 from math import sqrt
 
 root = ctk.CTk()
