@@ -33,6 +33,24 @@ BUTTON_STYLE = {
     "hover_color": "#4A4D52",
 }
 
+RESULT_BUTTON_STYLE = {
+    "font": ("Segoe UI", 14),
+    "fg_color": "#27a300",
+    "text_color": "#ecffeb",
+    "border_width": 0,
+    "corner_radius": 12,
+    "hover_color": "#8fcb9b",
+}
+
+OPERATOR_BUTTON_STYLE = {
+    "font": ("Segoe UI", 14),
+    "fg_color": "#3C4043",
+    "text_color": "#27a300",
+    "border_width": 0,
+    "corner_radius": 12,
+    "hover_color": "#8fcb9b",
+}
+
 displayframe = ctk.CTkFrame(root)
 displayframe.configure(fg_color=DISPLAY)
 displayframe.rowconfigure(0, minsize=70)
@@ -251,6 +269,16 @@ def result():
     firstNum = None
     newNum = True
 
+def makeButton(txt, cmd, rw, clm):
+    btn = ctk.CTkButton(buttonframe, text=txt, command=cmd, **BUTTON_STYLE)
+    btn.grid(row=rw, column=clm, sticky='nsew', padx=2, pady=2)
+    return btn
+
+def makeOperator(txt, cmd, rw, clm):
+    btn = ctk.CTkButton(buttonframe, text=txt, command=cmd, **OPERATOR_BUTTON_STYLE)
+    btn.grid(row=rw, column=clm, sticky='nsew', padx=2, pady=2)
+    return btn
+
 #Display Buttons
 buttonframe = ctk.CTkFrame(root)
 buttonframe.configure(fg_color=DISPLAY)
@@ -259,77 +287,44 @@ for i in range(6):
 for j in range(4):
     buttonframe.columnconfigure(j, weight=1, minsize=70)
 
-btnPercent = ctk.CTkButton(buttonframe, text="%", command=percentage, **BUTTON_STYLE)
-btnPercent.grid(row=0, column=0, sticky='nsew', padx=2, pady=2)
+operatorConfig = [
+    ("%", percentage, 0, 0),
+    ("CE", ce, 0, 1),
+    ("C", clear, 0, 2),
+    ("⌫", back, 0, 3),
+    ("¹/x", frac, 1, 0),
+    ("x²", square, 1, 1),
+    ("√x", sqroot, 1, 2),
+    ("÷", lambda: operate("/"), 1, 3),
+    ("×", lambda: operate("*"), 2, 3),
+    ("-", lambda: operate("-"), 3, 3),
+    ("+", lambda: operate("+"), 4, 3),
+    ("+/-", inverse, 5, 0),
+    (".", addComma, 5, 2)
+]
 
-btnCE = ctk.CTkButton(buttonframe, text="CE", command=ce, **BUTTON_STYLE)
-btnCE.grid(row=0, column=1, sticky='nsew', padx=2, pady=2)
+buttonConfig = [
+    ("1", lambda: addNum(1), 2, 0),
+    ("2", lambda: addNum(2), 2, 1),
+    ("3", lambda: addNum(3), 2, 2),
+    ("4", lambda: addNum(4), 3, 0),
+    ("5", lambda: addNum(5), 3, 1),
+    ("6", lambda: addNum(6), 3, 2),
+    ("7", lambda: addNum(7), 4, 0),
+    ("8", lambda: addNum(8), 4, 1),
+    ("9", lambda: addNum(9), 4, 2),
+    ("0", lambda: addNum(0), 5, 1)
+]
 
-btnClear = ctk.CTkButton(buttonframe, text="C", command=clear, **BUTTON_STYLE)
-btnClear.grid(row=0, column=2, sticky='nsew', padx=2, pady=2)
+for txt, cmd, rw, clm in operatorConfig:
+    makeOperator(txt, cmd, rw, clm)
 
-btnBack = ctk.CTkButton(buttonframe, text="⌫", command=back, **BUTTON_STYLE)
-btnBack.grid(row=0, column=3, sticky='nsew', padx=2, pady=2)
+for txt, cmd, rw, clm in buttonConfig:
+    makeButton(txt, cmd, rw, clm)
 
-btnFraction = ctk.CTkButton(buttonframe, text="¹/x", command=frac, **BUTTON_STYLE)
-btnFraction.grid(row=1, column=0, sticky='nsew', padx=2, pady=2)
-
-btnSquare = ctk.CTkButton(buttonframe, text="x²", command=square, **BUTTON_STYLE)
-btnSquare.grid(row=1, column=1, sticky='nsew', padx=2, pady=2)
-
-btnSqRoot = ctk.CTkButton(buttonframe, text="√x", command=sqroot, **BUTTON_STYLE)
-btnSqRoot.grid(row=1, column=2, sticky='nsew', padx=2, pady=2)
-
-btnDivide = ctk.CTkButton(buttonframe, text="÷", command=lambda: operate("/"), **BUTTON_STYLE)
-btnDivide.grid(row=1, column=3, sticky='nsew', padx=2, pady=2)
-
-btnMult = ctk.CTkButton(buttonframe, text="×", command=lambda: operate("*"), **BUTTON_STYLE)
-btnMult.grid(row=2, column=3, sticky='nsew', padx=2, pady=2)
-
-btnMinus = ctk.CTkButton(buttonframe, text="-", command=lambda: operate("-"), **BUTTON_STYLE)
-btnMinus.grid(row=3, column=3, sticky='nsew', padx=2, pady=2)
-
-btnPlus = ctk.CTkButton(buttonframe, text="+", command=lambda: operate("+"), **BUTTON_STYLE)
-btnPlus.grid(row=4, column=3, sticky='nsew', padx=2, pady=2)
-
-btnInverse = ctk.CTkButton(buttonframe, text="+/-", command=inverse, **BUTTON_STYLE)
-btnInverse.grid(row=5, column=0, sticky='nsew', padx=2, pady=2)
-
-btnComma = ctk.CTkButton(buttonframe, text=".", command=addComma, **BUTTON_STYLE)
-btnComma.grid(row=5, column=2, sticky='nsew', padx=2, pady=2)
-
-btnResult = ctk.CTkButton(buttonframe, text="=", command=result, **BUTTON_STYLE)
+btnResult = ctk.CTkButton(buttonframe, text="=", command=result, **RESULT_BUTTON_STYLE)
 btnResult.grid(row=5, column=3, sticky='nsew', padx=2, pady=2)
 
-btn1 = ctk.CTkButton(buttonframe, text="1", command=lambda: addNum(1), **BUTTON_STYLE)
-btn1.grid(row=2, column=0, sticky='nsew', padx=2, pady=2)
-
-btn2 = ctk.CTkButton(buttonframe, text="2", command=lambda: addNum(2), **BUTTON_STYLE)
-btn2.grid(row=2, column=1, sticky='nsew', padx=2, pady=2)
-
-btn3 = ctk.CTkButton(buttonframe, text="3", command=lambda: addNum(3), **BUTTON_STYLE)
-btn3.grid(row=2, column=2, sticky='nsew', padx=2, pady=2)
-
-btn4 = ctk.CTkButton(buttonframe, text="4", command=lambda: addNum(4), **BUTTON_STYLE)
-btn4.grid(row=3, column=0, sticky='nsew', padx=2, pady=2)
-
-btn5 = ctk.CTkButton(buttonframe, text="5", command=lambda: addNum(5), **BUTTON_STYLE)
-btn5.grid(row=3, column=1, sticky='nsew', padx=2, pady=2)
-
-btn6 = ctk.CTkButton(buttonframe, text="6", command=lambda: addNum(6), **BUTTON_STYLE)
-btn6.grid(row=3, column=2, sticky='nsew', padx=2, pady=2)
-
-btn7 = ctk.CTkButton(buttonframe, text="7", command=lambda: addNum(7), **BUTTON_STYLE)
-btn7.grid(row=4, column=0, sticky='nsew', padx=2, pady=2)
-
-btn8 = ctk.CTkButton(buttonframe, text="8", command=lambda: addNum(8), **BUTTON_STYLE)
-btn8.grid(row=4, column=1, sticky='nsew', padx=2, pady=2)
-
-btn9 = ctk.CTkButton(buttonframe, text="9", command=lambda: addNum(9), **BUTTON_STYLE)
-btn9.grid(row=4, column=2, sticky='nsew', padx=2, pady=2)
-
-btn0 = ctk.CTkButton(buttonframe, text="0", command=lambda: addNum(0), **BUTTON_STYLE)
-btn0.grid(row=5, column=1, sticky='nsew', padx=2, pady=2)
 
 displayframe.grid(row=0, column=0, sticky='nsew')
 buttonframe.grid(row=1, column=0, sticky='nsew')
