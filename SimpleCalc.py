@@ -17,53 +17,67 @@ displayed = "0"
 firstNum = None
 operator = None
 newNum = True
+MenuOpen = False
+
+buttonGroups = {
+    "standard": [],
+    "operator": [],
+    "result": []}
 
 #Styling
 DISPLAY = "#303134"
+SETTINGS_BG = "#52555C"
 TEXT = "#FFFFFF"
 fg_color = "#3C4043"
 HOVER = "#4A4D52"
 
-BUTTON_STYLE = {
-    "font": ("Segoe UI", 14),
-    "fg_color": "#3C4043",
-    "text_color": "white",
-    "border_width": 0,
-    "corner_radius": 12,
-    "hover_color": "#4A4D52",
+styles = {
+    "standard": {"font": ("Segoe UI", 14, "bold"),
+                 "fg_color": "#3C4043",
+                 "text_color": "white",
+                 "border_width": 0,
+                 "corner_radius": 12,
+                 "hover_color": "#4A4D52"
+                },
+    "operator": {"font": ("Segoe UI", 14, "bold"),
+                 "fg_color": "#3C4043",
+                 "text_color": "#27a300",
+                 "border_width": 0,
+                 "corner_radius": 12,
+                 "hover_color": "#8fcb9b"
+                },
+    "result": {
+        "font": ("Segoe UI", 14, "bold"),
+        "fg_color": "#27a300",
+        "text_color": "#ecffeb",
+        "border_width": 0,
+        "corner_radius": 12,
+        "hover_color": "#8fcb9b"
+        }
 }
 
-RESULT_BUTTON_STYLE = {
-    "font": ("Segoe UI", 14),
-    "fg_color": "#27a300",
+SETTINGS_STYLE = {
+    "font": ("Segoe UI", 14, "bold"),
+    "fg_color": "transparent",
+    "anchor": "w",
+    "height": 30,
     "text_color": "#ecffeb",
     "border_width": 0,
     "corner_radius": 12,
-    "hover_color": "#8fcb9b",
+    "hover_color": "#4A4D52"
 }
 
-OPERATOR_BUTTON_STYLE = {
-    "font": ("Segoe UI", 14),
-    "fg_color": "#3C4043",
-    "text_color": "#27a300",
-    "border_width": 0,
-    "corner_radius": 12,
-    "hover_color": "#8fcb9b",
-}
+#Structural Functions
+def toggleMenu():
+    global MenuOpen
+    if MenuOpen:
+        settings.place_forget()
+        MenuOpen = False
+    else:
+        settings.place(relx=1.0, rely=0.0, x=-15, y=65, anchor="ne")
+        settings.lift()
+        MenuOpen = True
 
-displayframe = ctk.CTkFrame(root)
-displayframe.configure(fg_color=DISPLAY)
-displayframe.rowconfigure(0, minsize=70)
-for i in range(3):
-    displayframe.columnconfigure(i, weight=1, minsize=100)
-
-prevDisplay = ctk.CTkLabel(displayframe, text="", anchor="e", font=("Segoe UI", 12), fg_color=DISPLAY, text_color=TEXT)
-display = ctk.CTkLabel(displayframe, text=displayed, anchor="e", pady=5, font=("Segoe UI", 24, "bold"), fg_color=DISPLAY, text_color=TEXT)
-prevDisplay.grid(row=0, column=0, columnspan=4, sticky='ew', padx=3, pady=3)
-display.grid(row=1, column=0, columnspan=4, sticky='ew', padx=3, pady=3)
-
-#Functions
-    
 def updateDisplay():
     display.configure(text=displayed)
 
@@ -238,7 +252,6 @@ def addComma():
 
     updateDisplay()
 
-
 def operate(op):
     global firstNum, operator, newNum
 
@@ -269,15 +282,110 @@ def result():
     firstNum = None
     newNum = True
 
+#Helper Functions
 def makeButton(txt, cmd, rw, clm):
-    btn = ctk.CTkButton(buttonframe, text=txt, command=cmd, **BUTTON_STYLE)
+    btn = ctk.CTkButton(buttonframe, text=txt, command=cmd, **styles["standard"])
     btn.grid(row=rw, column=clm, sticky='nsew', padx=2, pady=2)
+    buttonGroups["standard"].append(btn)
     return btn
 
 def makeOperator(txt, cmd, rw, clm):
-    btn = ctk.CTkButton(buttonframe, text=txt, command=cmd, **OPERATOR_BUTTON_STYLE)
+    btn = ctk.CTkButton(buttonframe, text=txt, command=cmd, **styles["operator"])
     btn.grid(row=rw, column=clm, sticky='nsew', padx=2, pady=2)
+    buttonGroups["operator"].append(btn)
     return btn
+
+def makeSettings(txt, cmd, x, y):
+    btn = ctk.CTkButton(settings, text=txt, command=cmd, **SETTINGS_STYLE)
+    btn.pack(fill="x", padx=x, pady=y)
+
+#Styling Functions
+def changeStyle(choice):
+    match choice:
+        case 0:     #Reset to Original Green Theme
+            styles["standard"].update({"fg_color": "#3C4043",
+                                 "text_color": "white",
+                                 "hover_color": "#4A4D52"})
+            styles["result"].update({"fg_color": "#27a300",
+                                        "text_color": "#ecffeb",
+                                        "hover_color": "#8fcb9b"})
+            styles["operator"].update({"fg_color": "#3C4043",
+                                          "text_color": "#27a300",
+                                          "hover_color": "#8fcb9b"})
+        case 1:     #Gray-ish Theme
+            styles["standard"].update({"fg_color": "#3C4043",
+                                 "text_color": "white",
+                                 "hover_color": "#4A4D52"})
+            styles["result"].update({"fg_color": "#161718",
+                                        "text_color": "white",
+                                        "hover_color": "#4A4D52"})
+            styles["operator"].update({"fg_color": "#3C4043",
+                                          "text_color": "white",
+                                          "hover_color": "#4A4D52"})
+        case 2:     #Blue / Snowy Theme
+            styles["standard"].update({"fg_color": "#293681",
+                                 "text_color": "#D0E7E6",
+                                 "hover_color": "#1B4EF5"})
+            styles["result"].update({"fg_color": "#77BEF0",
+                                        "text_color": "#D0E7E6",
+                                        "hover_color": "#1B4EF5"})
+            styles["operator"].update({"fg_color": "#293681",
+                                          "text_color": "#D0E7E6",
+                                          "hover_color": "#1B4EF5"})
+        case 3:     #Brown-ish / Earthy Theme
+            styles["standard"].update({"fg_color": "#936639",
+                                 "text_color": "#EDE8D0",
+                                 "hover_color": "#a68a64"})
+            styles["result"].update({"fg_color": "#d68c45",
+                                        "text_color": "#EDE8D0",
+                                        "hover_color": "#a68a64"})
+            styles["operator"].update({"fg_color": "#936639",
+                                          "text_color": "#EDE8D0",
+                                          "hover_color": "#a68a64"})
+
+    for styleType, btnList in buttonGroups.items():
+        for btn in btnList:
+            btn.configure(**styles[styleType])
+
+    toggleMenu()
+    
+#Display Structure       
+displayframe = ctk.CTkFrame(root)
+displayframe.configure(fg_color=DISPLAY)
+displayframe.rowconfigure(0, minsize=70)
+for i in range(3):
+    displayframe.columnconfigure(i, weight=1, minsize=100)
+
+settingsBtn = ctk.CTkButton(displayframe, 
+                            text="⚙️", 
+                            width=40, 
+                            height=40, 
+                            font=("Segoe UI", 20),
+                            fg_color="transparent", 
+                            hover_color="#4A4D52",
+                            command=toggleMenu)
+settings = ctk.CTkFrame(root, 
+                        width=100, 
+                        corner_radius=12, 
+                        fg_color=SETTINGS_BG)
+prevDisplay = ctk.CTkLabel(displayframe, 
+                           text="", 
+                           anchor="e", 
+                           padx=10,
+                           font=("Segoe UI", 12), 
+                           fg_color=DISPLAY, 
+                           text_color=TEXT)
+display = ctk.CTkLabel(displayframe, 
+                       text=displayed, 
+                       anchor="e", 
+                       padx=10,
+                       pady=5, 
+                       font=("Segoe UI", 24, "bold"), 
+                       fg_color=DISPLAY, 
+                       text_color=TEXT)
+
+prevDisplay.grid(row=1, column=0, columnspan=4, sticky='ew', padx=3, pady=3)
+display.grid(row=2, column=0, columnspan=4, sticky='ew', padx=3, pady=3)
 
 #Display Buttons
 buttonframe = ctk.CTkFrame(root)
@@ -286,6 +394,13 @@ for i in range(6):
     buttonframe.rowconfigure(i, weight=1, minsize=20)
 for j in range(4):
     buttonframe.columnconfigure(j, weight=1, minsize=70)
+
+settingsConfig = [
+    ("Original (Gray-Green)", lambda: changeStyle(0), 5, (5,2)),
+    ("Monochrome (Gray)", lambda: changeStyle(1), 5, 2),
+    ("Snowy (Blue)", lambda: changeStyle(2), 5, 2),
+    ("Earthy (Brown)", lambda: changeStyle(3), 5, (2, 5))
+]
 
 operatorConfig = [
     ("%", percentage, 0, 0),
@@ -316,16 +431,20 @@ buttonConfig = [
     ("0", lambda: addNum(0), 5, 1)
 ]
 
+for txt, cmd, x, y in settingsConfig:
+    makeSettings(txt, cmd, x, y)
+
 for txt, cmd, rw, clm in operatorConfig:
     makeOperator(txt, cmd, rw, clm)
 
 for txt, cmd, rw, clm in buttonConfig:
     makeButton(txt, cmd, rw, clm)
 
-btnResult = ctk.CTkButton(buttonframe, text="=", command=result, **RESULT_BUTTON_STYLE)
+btnResult = ctk.CTkButton(buttonframe, text="=", command=result, **styles["result"])
 btnResult.grid(row=5, column=3, sticky='nsew', padx=2, pady=2)
+buttonGroups["result"].append(btnResult)
 
-
+settingsBtn.place(relx=1.0, rely=0.0, x=-5, y=20, anchor="ne")
 displayframe.grid(row=0, column=0, sticky='nsew')
 buttonframe.grid(row=1, column=0, sticky='nsew')
 
