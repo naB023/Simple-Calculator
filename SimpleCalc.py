@@ -1,4 +1,6 @@
 import customtkinter as ctk
+import json
+from pathlib import Path
 from math import sqrt
 
 root = ctk.CTk()
@@ -12,19 +14,19 @@ root.rowconfigure(0, weight=1)
 root.rowconfigure(1, weight=4)
 root.columnconfigure(0, weight=1)
 
-#Display
+SETTINGS_FILE = Path("config.json")
+
+#Display, Styling
 displayed = "0"
 firstNum = None
 operator = None
 newNum = True
 MenuOpen = False
 
-buttonGroups = {
-    "standard": [],
-    "operator": [],
-    "result": []}
+buttonGroups = {"standard": [],
+                "operator": [],
+                "result": []}
 
-#Styling
 DISPLAY = "#303134"
 SETTINGS_BG = "#52555C"
 TEXT = "#FFFFFF"
@@ -32,20 +34,22 @@ fg_color = "#3C4043"
 HOVER = "#4A4D52"
 
 styles = {
-    "standard": {"font": ("Segoe UI", 14, "bold"),
-                 "fg_color": "#3C4043",
-                 "text_color": "white",
-                 "border_width": 0,
-                 "corner_radius": 12,
-                 "hover_color": "#4A4D52"
-                },
-    "operator": {"font": ("Segoe UI", 14, "bold"),
-                 "fg_color": "#3C4043",
-                 "text_color": "#27a300",
-                 "border_width": 0,
-                 "corner_radius": 12,
-                 "hover_color": "#8fcb9b"
-                },
+    "standard": {
+        "font": ("Segoe UI", 14, "bold"),
+        "fg_color": "#3C4043",
+        "text_color": "white",
+        "border_width": 0,
+        "corner_radius": 12,
+        "hover_color": "#4A4D52"
+    },
+    "operator": {
+        "font": ("Segoe UI", 14, "bold"),
+        "fg_color": "#3C4043",
+        "text_color": "#27a300",
+        "border_width": 0,
+        "corner_radius": 12,
+        "hover_color": "#8fcb9b"
+    },
     "result": {
         "font": ("Segoe UI", 14, "bold"),
         "fg_color": "#27a300",
@@ -53,7 +57,7 @@ styles = {
         "border_width": 0,
         "corner_radius": 12,
         "hover_color": "#8fcb9b"
-        }
+    }
 }
 
 SETTINGS_STYLE = {
@@ -68,6 +72,19 @@ SETTINGS_STYLE = {
 }
 
 #Structural Functions
+def loadSettings():
+    if SETTINGS_FILE.exists():
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {"theme_choice": 0}
+    return {"theme_choice": 0}
+
+def saveSettings(settings):
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(settings, f, indent=4)
+
 def toggleMenu():
     global MenuOpen
     if MenuOpen:
@@ -300,7 +317,7 @@ def makeSettings(txt, cmd, x, y):
     btn.pack(fill="x", padx=x, pady=y)
 
 #Styling Functions
-def changeStyle(choice):
+def changeStyle(choice, MenuOpen = True):
     match choice:
         case 0:     #Reset to Original Green Theme
             styles["standard"].update({"fg_color": "#3C4043",
@@ -312,6 +329,11 @@ def changeStyle(choice):
             styles["operator"].update({"fg_color": "#3C4043",
                                           "text_color": "#27a300",
                                           "hover_color": "#8fcb9b"})
+            displayframe.configure(fg_color=DISPLAY)
+            prevDisplay.configure(fg_color=DISPLAY)
+            display.configure(fg_color=DISPLAY)
+            buttonframe.configure(fg_color=DISPLAY)
+            
         case 1:     #Gray-ish Theme
             styles["standard"].update({"fg_color": "#3C4043",
                                  "text_color": "white",
@@ -322,16 +344,26 @@ def changeStyle(choice):
             styles["operator"].update({"fg_color": "#3C4043",
                                           "text_color": "white",
                                           "hover_color": "#4A4D52"})
+            displayframe.configure(fg_color=DISPLAY)
+            prevDisplay.configure(fg_color=DISPLAY)
+            display.configure(fg_color=DISPLAY)
+            buttonframe.configure(fg_color=DISPLAY)
+            
         case 2:     #Blue / Snowy Theme
-            styles["standard"].update({"fg_color": "#293681",
+            styles["standard"].update({"fg_color": "#5588ff",
                                  "text_color": "#D0E7E6",
-                                 "hover_color": "#1B4EF5"})
+                                 "hover_color": "#77aaff"})
             styles["result"].update({"fg_color": "#77BEF0",
                                         "text_color": "#D0E7E6",
-                                        "hover_color": "#1B4EF5"})
-            styles["operator"].update({"fg_color": "#293681",
+                                        "hover_color": "#77aaff"})
+            styles["operator"].update({"fg_color": "#5588ff",
                                           "text_color": "#D0E7E6",
-                                          "hover_color": "#1B4EF5"})
+                                          "hover_color": "#77aaff"})
+            displayframe.configure(fg_color="#023e8a")
+            prevDisplay.configure(fg_color="#023e8a")
+            display.configure(fg_color="#023e8a")
+            buttonframe.configure(fg_color="#023e8a")
+            
         case 3:     #Brown-ish / Earthy Theme
             styles["standard"].update({"fg_color": "#936639",
                                  "text_color": "#EDE8D0",
@@ -342,13 +374,22 @@ def changeStyle(choice):
             styles["operator"].update({"fg_color": "#936639",
                                           "text_color": "#EDE8D0",
                                           "hover_color": "#a68a64"})
+            displayframe.configure(fg_color="#5e503f")
+            prevDisplay.configure(fg_color="#5e503f")
+            display.configure(fg_color="#5e503f")
+            buttonframe.configure(fg_color="#5e503f")
 
     for styleType, btnList in buttonGroups.items():
         for btn in btnList:
             btn.configure(**styles[styleType])
 
-    toggleMenu()
-    
+    saveSettings({"theme_choice": choice})
+
+    if MenuOpen:
+        toggleMenu()
+
+app_settings = loadSettings()
+
 #Display Structure       
 displayframe = ctk.CTkFrame(root)
 displayframe.configure(fg_color=DISPLAY)
@@ -364,10 +405,11 @@ settingsBtn = ctk.CTkButton(displayframe,
                             fg_color="transparent", 
                             hover_color="#4A4D52",
                             command=toggleMenu)
+
 settings = ctk.CTkFrame(root, 
                         width=100, 
-                        corner_radius=12, 
                         fg_color=SETTINGS_BG)
+
 prevDisplay = ctk.CTkLabel(displayframe, 
                            text="", 
                            anchor="e", 
@@ -375,6 +417,7 @@ prevDisplay = ctk.CTkLabel(displayframe,
                            font=("Segoe UI", 12), 
                            fg_color=DISPLAY, 
                            text_color=TEXT)
+
 display = ctk.CTkLabel(displayframe, 
                        text=displayed, 
                        anchor="e", 
@@ -447,5 +490,10 @@ buttonGroups["result"].append(btnResult)
 settingsBtn.place(relx=1.0, rely=0.0, x=-5, y=20, anchor="ne")
 displayframe.grid(row=0, column=0, sticky='nsew')
 buttonframe.grid(row=1, column=0, sticky='nsew')
+
+saved_data = loadSettings()
+saved_theme = saved_data.get("theme_choice", 0)
+
+changeStyle(saved_theme, MenuOpen = False)
 
 root.mainloop()
