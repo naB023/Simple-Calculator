@@ -4,4 +4,5 @@ Basic Calculator with:
 3. Exponent (Square), Root (Square)
 4. Decimals
 5. Percentage
-6. More to Add Later...
+6. Preset App Themes (Gray-Green, Monochrome Gray, Snowy Blue, Earthy Brown)
+7. More Upcoming...
